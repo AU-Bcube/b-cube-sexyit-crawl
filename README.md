@@ -90,4 +90,4 @@ docs/DESIGN.md  설계 문서
 
 - **비공식 API 사용:** [instagrapi](https://github.com/subzeroid/instagrapi)의 내부 메서드와 Instagram 비공식 쿼리에 의존합니다. 로그인 없이는 instagrapi가 다음 페이지를 넘기지 못해서, `crawler/instagram.py`의 `TimelineClient`가 페이지 커서를 `profile_grid_items_cursor` 변수로 바꿔 보냅니다. instagrapi나 Instagram이 바뀌면 동작하지 않을 수 있습니다. 그럴 때는 위 안전장치 때문에 실행이 실패로 끝나고 데이터는 바뀌지 않습니다.
 - **IP 차단:** Instagram이 데이터센터 IP의 로그인 없는 요청을 막을 수 있습니다. GitHub Actions에서 계속 실패하면 실행 환경을 바꿔야 할 수 있습니다.
-- **수정된 게시물:** 이미 저장한 게시물의 본문이나 이미지가 바뀌어도 다시 반영하지 않습니다.
+- **수정된 게시물:** 이미 저장한 게시물의 본문이나 이미지가 바뀌어도 자동으로 반영하지 않습니다. 반영하려면 MongoDB에서 해당 문서를 삭제하세요. 다음 실행에서 최신 내용으로 다시 저장됩니다. 다른 프로젝트에서 이 컬렉션을 쓰는 방법은 [docs/SEXYITS2_CRAWL_HANDOFF.md](docs/SEXYITS2_CRAWL_HANDOFF.md)에 있습니다.
