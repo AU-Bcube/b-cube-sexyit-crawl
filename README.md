@@ -57,7 +57,7 @@ uv run pytest          # 단위 테스트
 저장소의 **Settings → Secrets and variables → Actions**에 아래 값을 등록합니다.
 
 - **Secrets:** `DB_CONNECTION_STRING`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
-- **Variables:** `IG_USERNAME`, `DB_NAME`, `S3_ENDPOINT`, `S3_PREFIX`, `S3_DEV_ACCESS_URL`
+- **Variables:** `IG_USERNAME`, `DB_NAME`, `S3_ENDPOINT`, `S3_PREFIX`, `S3_DEV_ACCESS_URL`, `MAX_DELETE_RATIO`(선택)
 
 **Actions → Crawl Instagram → Run workflow**로 수동 실행할 수도 있습니다. GitHub 예약 실행은 몇 분에서 수십 분 늦게 시작될 수 있습니다.
 
