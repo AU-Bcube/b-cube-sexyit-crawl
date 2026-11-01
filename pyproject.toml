@@ -3,6 +3,8 @@ name = "b-cube-sexyit-crawl"
 version = "1.0.0"
 description = "Daily Instagram crawler that stores new posts to Cloudflare R2 and MongoDB"
 requires-python = ">=3.11"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
 dependencies = [
     "boto3>=1.35",
     "instagrapi>=3.2.2",
