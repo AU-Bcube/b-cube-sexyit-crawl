@@ -1,3 +1,5 @@
+[![Crawl Instagram](https://github.com/AU-Bcube/b-cube-sexyit-crawl/actions/workflows/crawl.yml/badge.svg)](https://github.com/AU-Bcube/b-cube-sexyit-crawl/actions/workflows/crawl.yml)
+
 # b-cube-sexyit-crawl
 
 공개 Instagram 계정의 게시물을 매일 크롤링해 이미지는 Cloudflare R2에, 게시물 정보는 MongoDB `sexyits2` 컬렉션에 저장합니다. Instagram 로그인 없이 동작합니다.
