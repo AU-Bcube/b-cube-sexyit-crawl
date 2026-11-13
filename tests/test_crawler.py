@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from crawler.config import load_config
+from crawler.instagram import fetch_first_page_posts
 from crawler.post import Post, extract_title, to_post
 from crawler.sync import plan_sync
 
@@ -44,6 +45,38 @@ def test_to_post_uses_first_album_item():
     assert p.image_url == "https://cdn/first.jpg"
 
 
+def test_fetch_first_page_posts_skips_profile_lookup_and_stops_after_one_page(monkeypatch):
+    profile_html = (
+        '"resource":{"__dr":"PolarisProfilePostsTabRoot.react"},'
+        '"props":{"id":"123"}'
+    )
+    profile_requests = []
+
+    class FakeResponse:
+        text = profile_html
+
+        def raise_for_status(self):
+            pass
+
+    def fake_get(url, timeout):
+        profile_requests.append((url, timeout))
+        return FakeResponse()
+
+    monkeypatch.setattr("crawler.instagram.requests.get", fake_get)
+
+    timeline_requests = []
+
+    class FakeClient:
+        def _user_medias_paginated_app_gql(self, user_id, amount):
+            timeline_requests.append((user_id, amount))
+            return [media()], "next-page-cursor"
+
+    monkeypatch.setattr("crawler.instagram.Client", FakeClient)
+    assert [p.ig_post_id for p in fetch_first_page_posts("target")] == ["ABC"]
+    assert profile_requests == [("https://www.instagram.com/target/", 30)]
+    assert timeline_requests == [("123", 12)]
+
+
 def test_adds_new_and_deletes_removed():
     plan = plan_sync(["b", "c", "d"], [post("a", 3), post("b", 2), post("c", 1)], 0.5)
     assert [p.ig_post_id for p in plan.to_add] == ["a"]
@@ -63,6 +96,11 @@ def test_dedupes_posts_listed_twice():
 
 def test_allows_small_deletions():
     assert plan_sync(["a", "b"], [post("a", 1)], 0.5).to_delete == ["b"]
+
+
+def test_partial_snapshot_never_deletes_stored_posts():
+    plan = plan_sync(["old", "current"], [post("current", 1)], 0.5, complete_snapshot=False)
+    assert plan.to_delete == []
 
 
 def test_refuses_empty_or_suspicious_crawl():
