@@ -6,6 +6,17 @@ from .config import R2Config
 EXT_BY_TYPE = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/heic": "heic"}
 
 
+def image_download_session() -> requests.Session:
+    """Session for image downloads that always connects directly.
+
+    ``trust_env`` is off so proxy env vars (``HTTPS_PROXY`` etc.) are ignored;
+    only Instagram API requests may go through the proxy.
+    """
+    session = requests.Session()
+    session.trust_env = False
+    return session
+
+
 class R2Uploader:
     def __init__(self, config: R2Config, http: requests.Session) -> None:
         self._config = config

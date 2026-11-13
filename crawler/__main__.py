@@ -1,12 +1,11 @@
 import logging
 import sys
 
-import requests
 from pymongo import ASCENDING, MongoClient
 
 from .config import load_config
-from .instagram import fetch_all_posts
-from .r2 import R2Uploader
+from .instagram import fetch_first_page_posts
+from .r2 import R2Uploader, image_download_session
 from .sync import plan_sync
 
 log = logging.getLogger("crawler")
@@ -14,15 +13,17 @@ log = logging.getLogger("crawler")
 
 def run() -> int:
     config = load_config()
-    with MongoClient(config.mongo_uri, tz_aware=True) as mongo, requests.Session() as http:
+    with MongoClient(config.mongo_uri, tz_aware=True) as mongo, image_download_session() as http:
         posts = mongo[config.db_name]["sexyits2"]
         posts.create_index([("ig_post_id", ASCENDING)], unique=True)
 
         stored_ids = posts.distinct("ig_post_id")
-        crawled = fetch_all_posts(config.ig_target)
+        crawled = fetch_first_page_posts(config.ig_target, config.ig_proxy_url)
+        if config.ig_proxy_url:
+            log.info("instagram requests used IG_PROXY_URL")
         log.info("stored=%d crawled=%d", len(stored_ids), len(crawled))
 
-        plan = plan_sync(stored_ids, crawled, config.max_delete_ratio)
+        plan = plan_sync(stored_ids, crawled, config.max_delete_ratio, complete_snapshot=False)
         if plan.skipped:
             log.info("skipped %d posts without a hashtag: %s", len(plan.skipped), ", ".join(plan.skipped))
         uploader = R2Uploader(config.r2, http)

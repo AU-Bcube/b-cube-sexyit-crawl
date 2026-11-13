@@ -15,11 +15,18 @@ class SyncPlan:
     skipped: list[str]
 
 
-def plan_sync(stored_ids: Iterable[str], crawled: Sequence[Post], max_delete_ratio: float) -> SyncPlan:
+def plan_sync(
+    stored_ids: Iterable[str],
+    crawled: Sequence[Post],
+    max_delete_ratio: float,
+    *,
+    complete_snapshot: bool = True,
+) -> SyncPlan:
     """Diff the crawled posts against what is stored.
 
-    Raises instead of returning a plan when the result looks like a broken
-    crawl, so a partial or blocked crawl can never wipe the collection.
+    When ``complete_snapshot`` is false, missing IDs are retained because the
+    result may contain only one page. Empty results still fail if the DB has
+    posts, since that can indicate a blocked or broken crawl.
     """
     stored = set(stored_ids)
     live = {post.ig_post_id: post for post in crawled}
@@ -27,7 +34,7 @@ def plan_sync(stored_ids: Iterable[str], crawled: Sequence[Post], max_delete_rat
     new = [post for post_id, post in live.items() if post_id not in stored]
     to_add = [post for post in new if post.title]
     skipped = [post.ig_post_id for post in new if not post.title]
-    to_delete = sorted(stored - live.keys())
+    to_delete = sorted(stored - live.keys()) if complete_snapshot else []
 
     if stored and not live:
         raise RuntimeError("Crawl returned 0 posts but the DB has posts; refusing to delete anything")

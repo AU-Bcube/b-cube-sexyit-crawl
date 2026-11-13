@@ -36,3 +36,5 @@ jobs:
           S3_DEV_ACCESS_URL: ${{ vars.S3_DEV_ACCESS_URL }}
           # Unset maps to an empty string, which falls back to the default.
           MAX_DELETE_RATIO: ${{ vars.MAX_DELETE_RATIO }}
+          # Optional. Used only for Instagram requests, not for image downloads.
+          IG_PROXY_URL: ${{ secrets.IG_PROXY_URL }}
