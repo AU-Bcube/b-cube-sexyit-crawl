@@ -6,6 +6,7 @@ import pytest
 from crawler.config import load_config
 from crawler.instagram import fetch_first_page_posts
 from crawler.post import Post, extract_title, to_post
+from crawler.r2 import image_download_session
 from crawler.sync import plan_sync
 
 BASE = datetime(2026, 10, 1, tzinfo=UTC)
@@ -58,8 +59,8 @@ def test_fetch_first_page_posts_skips_profile_lookup_and_stops_after_one_page(mo
         def raise_for_status(self):
             pass
 
-    def fake_get(url, timeout):
-        profile_requests.append((url, timeout))
+    def fake_get(url, timeout, proxies=None):
+        profile_requests.append((url, timeout, proxies))
         return FakeResponse()
 
     monkeypatch.setattr("crawler.instagram.requests.get", fake_get)
@@ -73,8 +74,49 @@ def test_fetch_first_page_posts_skips_profile_lookup_and_stops_after_one_page(mo
 
     monkeypatch.setattr("crawler.instagram.Client", FakeClient)
     assert [p.ig_post_id for p in fetch_first_page_posts("target")] == ["ABC"]
-    assert profile_requests == [("https://www.instagram.com/target/", 30)]
+    assert profile_requests == [("https://www.instagram.com/target/", 30, None)]
     assert timeline_requests == [("123", 12)]
+
+
+def test_fetch_first_page_posts_routes_both_instagram_requests_through_proxy(monkeypatch):
+    proxy = "http://user:pass@proxy:8080"
+    profile_proxies = []
+
+    class FakeResponse:
+        text = '"resource":{"__dr":"PolarisProfilePostsTabRoot.react"},"props":{"id":"123"}'
+
+        def raise_for_status(self):
+            pass
+
+    def fake_get(url, timeout, proxies=None):
+        profile_proxies.append(proxies)
+        return FakeResponse()
+
+    monkeypatch.setattr("crawler.instagram.requests.get", fake_get)
+
+    client_proxies = []
+
+    class FakeClient:
+        def set_proxy(self, dsn):
+            client_proxies.append(dsn)
+
+        def _user_medias_paginated_app_gql(self, user_id, amount):
+            return [media()], None
+
+    monkeypatch.setattr("crawler.instagram.Client", FakeClient)
+    fetch_first_page_posts("target", proxy)
+    assert profile_proxies == [{"http": proxy, "https": proxy}]
+    assert client_proxies == [proxy]
+
+
+def test_image_download_session_ignores_proxy_env(monkeypatch):
+    monkeypatch.setenv("HTTPS_PROXY", "http://proxy:8080")
+    monkeypatch.setenv("HTTP_PROXY", "http://proxy:8080")
+    session = image_download_session()
+    assert session.trust_env is False
+    assert session.proxies == {}
+    settings = session.merge_environment_settings("https://scontent.cdninstagram.com/x.jpg", {}, None, None, None)
+    assert not settings["proxies"]
 
 
 def test_adds_new_and_deletes_removed():
@@ -122,6 +164,8 @@ def test_load_config_parses_r2_and_reports_all_missing():
         "https://acc.r2.cloudflarestorage.com", "bcube", "sexyit2")
     assert config.r2.public_base_url == "https://pub.r2.dev"
     assert config.db_name == "bcube"
+    assert config.ig_proxy_url is None
+    assert load_config(env | {"IG_PROXY_URL": " http://p:1 "}).ig_proxy_url == "http://p:1"
 
     with pytest.raises(ValueError, match="IG_USERNAME, DB_NAME, S3_ACCESS_KEY_ID"):
         load_config(env | {"IG_USERNAME": "", "DB_NAME": "", "S3_ACCESS_KEY_ID": ""})

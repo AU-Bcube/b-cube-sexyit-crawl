@@ -51,6 +51,7 @@ uv run pytest          # 단위 테스트
 | `S3_SECRET_ACCESS_KEY` | ✓ | R2 API 토큰 시크릿 키 |
 | `S3_DEV_ACCESS_URL` | ✓ | R2 공개 URL. 예: `https://pub-xxxx.r2.dev` |
 | `MAX_DELETE_RATIO` | | 한 번에 삭제할 수 있는 최대 비율. 기본값 `0.5` |
+| `IG_PROXY_URL` | | Instagram 요청(프로필 HTML, 게시물 조회)에만 쓰는 proxy. 예: `http://user:pass@host:port`. 이미지 다운로드와 R2 업로드는 proxy를 거치지 않습니다. |
 
 ## GitHub Actions 설정
 
@@ -58,7 +59,7 @@ uv run pytest          # 단위 테스트
 
 저장소의 **Settings → Secrets and variables → Actions**에 아래 값을 등록합니다.
 
-- **Secrets:** `DB_CONNECTION_STRING`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
+- **Secrets:** `DB_CONNECTION_STRING`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `IG_PROXY_URL`(선택)
 - **Variables:** `IG_USERNAME`, `DB_NAME`, `S3_ENDPOINT`, `S3_PREFIX`, `S3_DEV_ACCESS_URL`, `MAX_DELETE_RATIO`(선택)
 
 **Actions → Crawl Instagram → Run workflow**로 수동 실행할 수도 있습니다. GitHub 예약 실행은 몇 분에서 수십 분 늦게 시작될 수 있습니다.

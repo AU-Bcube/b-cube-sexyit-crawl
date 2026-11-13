@@ -20,6 +20,8 @@ class Config:
     db_name: str
     r2: R2Config
     max_delete_ratio: float
+    # Applied to Instagram requests only; image downloads and R2 never use it.
+    ig_proxy_url: str | None = None
 
 
 def load_config(env: dict[str, str] | None = None) -> Config:
@@ -73,4 +75,5 @@ def load_config(env: dict[str, str] | None = None) -> Config:
             public_base_url=values["S3_DEV_ACCESS_URL"].rstrip("/"),
         ),
         max_delete_ratio=max_delete_ratio,
+        ig_proxy_url=(env.get("IG_PROXY_URL") or "").strip() or None,
     )
