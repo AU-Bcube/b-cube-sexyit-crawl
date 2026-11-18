@@ -38,3 +38,11 @@ jobs:
           MAX_DELETE_RATIO: ${{ vars.MAX_DELETE_RATIO }}
           # Optional. Used only for Instagram requests, not for image downloads.
           IG_PROXY_URL: ${{ secrets.IG_PROXY_URL }}
+      - name: Revalidate projects page
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          test -n "$REVALIDATE_SECRET" || { echo 'REVALIDATE_SECRET is not configured' >&2; exit 1; }
+          curl --fail-with-body --silent --show-error --max-time 30 -X POST \
+            -H "Authorization: Bearer $REVALIDATE_SECRET" \
+            https://www.b-cube.kr/api/revalidate
