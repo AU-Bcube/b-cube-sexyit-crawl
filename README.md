@@ -14,6 +14,7 @@
    - **새 게시물:** 가장 큰 해상도의 이미지를 R2에 올리고 MongoDB에 저장합니다. 여러 장짜리 게시물은 첫 장, 동영상은 커버 이미지를 씁니다.
    - **본문에 해시태그가 없는 새 게시물:** 저장하지 않고 건너뜁니다. 나중에 해시태그가 추가되면 다음 실행에서 저장됩니다.
    - **수집 결과에 없는 저장된 게시물:** 첫 페이지만 보므로 삭제 여부를 알 수 없습니다. 지우지 않고 그대로 둡니다.
+4. 크롤링과 저장이 성공하면 웹사이트의 `/projects` 캐시를 재검증합니다. 다음 방문 시 최신 데이터가 반영됩니다.
 
 ## 저장 스키마 (`sexyits2`)
 
@@ -59,10 +60,12 @@ uv run pytest          # 단위 테스트
 
 저장소의 **Settings → Secrets and variables → Actions**에 아래 값을 등록합니다.
 
-- **Secrets:** `DB_CONNECTION_STRING`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `IG_PROXY_URL`(선택)
+- **Secrets:** `DB_CONNECTION_STRING`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REVALIDATE_SECRET`, `IG_PROXY_URL`(선택)
 - **Variables:** `IG_USERNAME`, `DB_NAME`, `S3_ENDPOINT`, `S3_PREFIX`, `S3_DEV_ACCESS_URL`, `MAX_DELETE_RATIO`(선택)
 
 **Actions → Crawl Instagram → Run workflow**로 수동 실행할 수도 있습니다. GitHub 예약 실행은 몇 분에서 수십 분 늦게 시작될 수 있습니다.
+
+`REVALIDATE_SECRET`은 웹사이트의 Netlify 환경변수와 같은 값이어야 합니다. 재검증 요청이 실패하면 워크플로도 실패하며, 이미 저장된 데이터는 유지됩니다. 재검증 API가 운영 환경에 배포된 후 사용하세요.
 
 ## 안전장치
 
